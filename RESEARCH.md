@@ -28,4 +28,4 @@ Reason: Learn how to use API functions
 
 Website: YouTube API Implementation Guide
 Source: https://developers.google.com/youtube/v3/guides/implementation/pagination
-Reason: Learnt the concept of pagination, and how to use it
+Reason: Learnt the concept of pagination, and how to use it to retrieve more than 50 results
