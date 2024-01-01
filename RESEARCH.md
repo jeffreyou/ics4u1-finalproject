@@ -25,3 +25,7 @@ Reason: Used to access google api through local environment
 Website: YouTube API Reference
 Source: https://developers.google.com/youtube/v3/docs
 Reason: Learn how to use API functions
+
+Website: YouTube API Implementation Guide
+Source: https://developers.google.com/youtube/v3/guides/implementation/pagination
+Reason: Learnt the concept of pagination, and how to use it
