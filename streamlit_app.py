@@ -1,27 +1,3 @@
-
-''' 
-def get_playlists():
-    playlists = []
-    index = 0
-    playlist_request = youtube.playlists().list(
-    part='snippet',
-    channelId = 'UCsVz2qkd_oGXGC66fcH4SFA',
-    maxResults = 100
-    )
-    playlist_response = playlist_request.execute()
-    maxResults = 100
-    while len(playlists) < maxResults: # Iterating through playlists page 
-        playlists += playlist_response['items'][index]['snippet']['title']
-        playlist_request = youtube.playlists().list_next(playlist_request, playlist_response)
-        index += 1
-    return playlists
-
-st.write(get_playlists())
-'''
-
-#for title in playlist_response.playlists[snippet][title]:
-   #  st.write(playlist_response.playlists[snippet][title])
-
 import streamlit as st
 from googleapiclient.discovery import build
 
@@ -30,43 +6,70 @@ youtube = build('youtube', 'v3', developerKey=API_KEY)
 
 channelId = "UCsVz2qkd_oGXGC66fcH4SFA"
 
-next_page_token = None # Used to check page turns
-def get_playlist_info(channelId):
-    request = youtube.playlists().list( # States request parameters
-    part="snippet",
-    channelId=channelId,
-    maxResults=50,
-    pageToken = next_page_token,
+next_page_token = None
+
+def get_playlist_info(channelId, page_token=None):
+    global next_page_token
+    request = youtube.playlists().list(
+        part="snippet",
+        channelId=channelId,
+        maxResults=50,
+        pageToken=page_token,
     )
     response = request.execute()
     return response
-    
+
 def get_channel_playlists(channelId):
-    playlists = []
+    playlists = {} # dict of playlist titles and ids
+    global next_page_token
 
     while True:
         # Request the playlists for the given channel
-        get_playlist_info(channelId)
-        next_page_token = get_playlist_info(channelId).get('nextPageToken')
+        response = get_playlist_info(channelId, page_token=next_page_token)
+
         # Extract playlist titles
-        for playlist in get_playlist_info(channelId).get('items', []):
-            playlists.append(playlist['snippet']['title'])
-        return playlists
-       
+        for playlist in response.get('items', []):
+            playlists[playlist['snippet']['title']] = playlist['id'] # Assigns key of title, value of playlist id
+
+        next_page_token = response.get('nextPageToken')
+
+        if not next_page_token:
+            return playlists
 
 
+def get_videos(id,page_token=None):
+    videos = {} # dict of video titles and ids
+
+    while True:
+        request = youtube.playlistItems().list(
+            part=["contentDetails","id","snippet","status"],
+            playlistId = id,
+            maxResults = 50,
+            pageToken = page_token
+        )
+        response = request.execute()
+
+        for playlistItems in response.get('items', []):
+            videos[playlistItems['snippet']['title']] = playlistItems['contentDetails']['videoId']
+        
+        page_token = response.get('nextPageToken')
+
+        if not page_token:
+            return videos
+        
+# Start of front end display
 st.title("League VOD Manager")
 
+
 champion = st.text_input("Enter a champion:")
+
 if champion:
-    st.write(f"Searching for {champion}...")
-
-'''
-if champion: # Only starts once value is entered
-    for title in get_channel_playlists(channelId):
-        if champion in title:
+    for key in get_channel_playlists(channelId):
+        if champion in key:
+            id = get_channel_playlists(channelId).get(key)
             st.write(f"{champion} playlist found!")
-'''
-st.write(get_channel_playlists(channelId))
-
+            for key in get_videos(id):
+                st.button(key) # fetch videos of title playlist
+            break
+    st.write(f"{champion} playlist not found...")
 
