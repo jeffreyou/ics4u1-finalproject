@@ -7,6 +7,8 @@ youtube = build('youtube', 'v3', developerKey=API_KEY)
 channelId = "UCsVz2qkd_oGXGC66fcH4SFA"
 
 next_page_token = None
+runs = 0
+results = 0
 
 def get_playlist_info(channelId, page_token=None):
     global next_page_token
@@ -56,7 +58,7 @@ def get_videos(id,page_token=None):
 
         if not page_token:
             return videos
-        
+
 # Start of front end display
 st.title("League VOD Manager")
 
@@ -64,12 +66,19 @@ st.title("League VOD Manager")
 champion = st.text_input("Enter a champion:")
 
 if champion:
-    for key in get_channel_playlists(channelId):
-        if champion in key:
-            id = get_channel_playlists(channelId).get(key)
-            st.write(f"{champion} playlist found!")
-            for key in get_videos(id):
-                st.button(key) # fetch videos of title playlist
-            break
-    st.write(f"{champion} playlist not found...")
+    runs += 1
+    if runs == 2:
+        st.rerun()
+    progress_text = f"Searching {champion}..."
+    progress_bar = st.progress(0, text=progress_text)
+    with st.expander(f'Videos'):
+        for key in get_channel_playlists(channelId):
+            if champion in key:
+                id = get_channel_playlists(channelId).get(key)
+                total = len(get_videos(id))
+                for key in get_videos(id):
+                    st.button(key) # creates button that passes title and videoId
+                    results += 1
+                    progress_bar.progress(results / total, text=progress_text)
+                break
 
