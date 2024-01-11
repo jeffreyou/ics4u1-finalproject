@@ -59,6 +59,17 @@ def get_videos(id,page_token=None):
         if not page_token:
             return videos
 
+def display_video(champion,key):
+    global results
+    id = get_channel_playlists(channelId).get(key)
+    total = len(get_videos(id))
+    progress_text = f"Searching {champion} ({results} / {total})..."
+    progress_bar = st.progress(0, text=progress_text)
+    for key in get_videos(id):
+        st.link_button(key,f'https://www.youtube.com/watch?v={get_videos(id)[key]}') # creates button that passes title and videoId
+        results += 1
+        progress_bar.progress(results / total, text=f"Searching {champion} ({results} / {total})...")
+    
 # Start of front end display
 st.title("League VOD Manager")
 
@@ -69,16 +80,25 @@ if champion:
     runs += 1
     if runs == 2:
         st.rerun()
-    progress_text = f"Searching {champion}..."
-    progress_bar = st.progress(0, text=progress_text)
     with st.expander(f'Videos'):
         for key in get_channel_playlists(channelId):
             if champion in key:
+                display_video(champion,key)
+                '''
                 id = get_channel_playlists(channelId).get(key)
                 total = len(get_videos(id))
+                progress_text = f"Searching {champion} ({results} / {total})..."
+                progress_bar = st.progress(0, text=progress_text)
                 for key in get_videos(id):
-                    st.button(key) # creates button that passes title and videoId
+                    st.link_button(key,f'https://www.youtube.com/watch?v={get_videos(id)[key]}') # creates button that passes title and videoId
                     results += 1
-                    progress_bar.progress(results / total, text=progress_text)
+                    progress_bar.progress(results / total, text=f"Searching {champion} ({results} / {total})...")
                 break
+                '''
 
+'''
+things to add:
+filters (role, matchup, size, patch?)
+style the website to look better
+add more functions to make code more readable 
+'''
