@@ -9,6 +9,18 @@ channelId = "UCsVz2qkd_oGXGC66fcH4SFA"
 next_page_token = None
 runs = 0
 results = 0
+champions = (
+    "Aatrox","Ahri","Akali","Akshan","Alistar","Amumu","Anivia","Annie","Aphelios","Ashe","Aurelion Sol","Azir","Bard","Bel'Veth","Blitzcrank","Brand",
+    "Braum","Briar","Caitlyn","Camille","Cassiopeia","Cho'Gath","Corki","Darius","Diana","Dr. Mundo","Draven","Ekko","Elise","Evelynn","Ezreal","Fiddlesticks",
+    "Fiora","Fizz","Galio","Gangplank","Garen","Gnar","Gragas","Graves","Gwen","Hecarim","Heimerdinger","Hwei","Illaoi","Irelia","Ivern","Janna","Jarvan IV","Jax",
+    "Jayce","Jhin","Jinx","K'Sante","Kai'Sa","Kalista","Karma","Karthus","Kassadin","Katarina","Kayle","Kayn","Kennen","Kha'Zix","Kindred","Kled","Kog'Maw","Leblanc",
+    "Lee Sin","Leona","Lillia","Lissandra","Lucian","Lulu","Lux","Malphite","Malzahar","Maokai","Master Yi","Milio","Miss Fortune","Mordekaiser","Morgana","Naafiri",
+    "Nami","Nasus","Nautilius","Neeko","Nidalee","Nilah","Nocturne","Nunu & Willump","Olaf","Orianna","Ornn","Pantheon","Poppy","Pyke","Qiyana","Quinn","Rakan","Rammus",
+    "Rek'Sai","Rell","Renata Glasc","Renekton","Rengar","Riven","Rumble","Ryze","Samira","Sejuani","Senna","Seraphine","Sett","Shaco","Shen","Shyvana","Singed","Sion",
+    "Sivir","Skarner","Sona","Soraka","Swain","Sylas","Syndra","Tahm Kench","Taliyah","Talon","Taric","Teemo","Thresh","Tristana","Trundle","Tryndamere","Twisted Fate",
+    "Twitch","Udyr","Urgot","Varus","Vayne","Veigar","Vel'Koz","Vex","Vi","Viego","Viktor","Vladimir","Volibear","Warwick","Wukong","Xayah","Xerath","Xin Zhao","Yasuo",
+    "Yone","Yorick","Yuumi","Zac","Zed","Zeri","Ziggs","Zilean","Zoe","Zyra"
+)
 
 def get_playlist_info(channelId, page_token=None):
     global next_page_token
@@ -69,14 +81,22 @@ def display_video(champion,key):
         st.link_button(key,f'https://www.youtube.com/watch?v={get_videos(id)[key]}') # creates button that passes title and videoId
         results += 1
         progress_bar.progress(results / total, text=f"Searching {champion} ({results} / {total})...")
-    
+
+def filter():
+    # 
+    pass
 # Start of front end display
 st.title("League VOD Manager")
 
 
-champion = st.text_input("Enter a champion:")
+champion = st.selectbox("Enter a champion:", champions)
+role = st.selectbox(
+    'Choose test:',
+    ('All Results','Top','Jungle','Mid','Carry','Support')
+)
+opponent = st.selectbox('Choose matchup:', champions)
 
-if champion:
+if champion: # change to if submit button is pressed
     runs += 1
     if runs == 2:
         st.rerun()
@@ -84,21 +104,12 @@ if champion:
         for key in get_channel_playlists(channelId):
             if champion in key:
                 display_video(champion,key)
-                '''
-                id = get_channel_playlists(channelId).get(key)
-                total = len(get_videos(id))
-                progress_text = f"Searching {champion} ({results} / {total})..."
-                progress_bar = st.progress(0, text=progress_text)
-                for key in get_videos(id):
-                    st.link_button(key,f'https://www.youtube.com/watch?v={get_videos(id)[key]}') # creates button that passes title and videoId
-                    results += 1
-                    progress_bar.progress(results / total, text=f"Searching {champion} ({results} / {total})...")
-                break
-                '''
+        
 
 '''
 things to add:
 filters (role, matchup, size, patch?)
+for size, add scroller that scales with length of selected champion playlist
 style the website to look better
 add more functions to make code more readable 
 '''
