@@ -9,8 +9,9 @@ channelId = "UCsVz2qkd_oGXGC66fcH4SFA"
 next_page_token = None
 runs = 0
 results = 0
+queries = 0
 champions = (
-    "Aatrox","Ahri","Akali","Akshan","Alistar","Amumu","Anivia","Annie","Aphelios","Ashe","Aurelion Sol","Azir","Bard","Bel'Veth","Blitzcrank","Brand",
+    "All Results","Aatrox","Ahri","Akali","Akshan","Alistar","Amumu","Anivia","Annie","Aphelios","Ashe","Aurelion Sol","Azir","Bard","Bel'Veth","Blitzcrank","Brand",
     "Braum","Briar","Caitlyn","Camille","Cassiopeia","Cho'Gath","Corki","Darius","Diana","Dr. Mundo","Draven","Ekko","Elise","Evelynn","Ezreal","Fiddlesticks",
     "Fiora","Fizz","Galio","Gangplank","Garen","Gnar","Gragas","Graves","Gwen","Hecarim","Heimerdinger","Hwei","Illaoi","Irelia","Ivern","Janna","Jarvan IV","Jax",
     "Jayce","Jhin","Jinx","K'Sante","Kai'Sa","Kalista","Karma","Karthus","Kassadin","Katarina","Kayle","Kayn","Kennen","Kha'Zix","Kindred","Kled","Kog'Maw","Leblanc",
@@ -73,43 +74,48 @@ def get_videos(id,page_token=None):
 
 def display_video(champion,key):
     global results
+    global queries
     id = get_channel_playlists(channelId).get(key)
     total = len(get_videos(id))
     progress_text = f"Searching {champion} ({results} / {total})..."
     progress_bar = st.progress(0, text=progress_text)
     for key in get_videos(id):
-        st.link_button(key,f'https://www.youtube.com/watch?v={get_videos(id)[key]}') # creates button that passes title and videoId
+        if role and opponent in key:
+            if queries < max_queries:
+                queries += 1
+                st.link_button(key,f'https://www.youtube.com/watch?v={get_videos(id)[key]}') # creates button that passes title and videoId
         results += 1
         progress_bar.progress(results / total, text=f"Searching {champion} ({results} / {total})...")
 
-def filter():
-    # 
-    pass
 # Start of front end display
 st.title("League VOD Manager")
+st.divider()
+st.caption('_Find High Elo Gameplay with :red[Ease]_')
 
 
-champion = st.selectbox("Enter a champion:", champions)
+champion = st.selectbox("**Enter a champion:**", champions)
 role = st.selectbox(
-    'Choose test:',
+    '**Choose Role:**',
     ('All Results','Top','Jungle','Mid','Carry','Support')
 )
-opponent = st.selectbox('Choose matchup:', champions)
+if role == "All Results":
+    role = 'Patch' # all titles contain 'Patch'
 
-if champion: # change to if submit button is pressed
+opponent = st.selectbox('**Choose Matchup:**    ', champions)
+if opponent == "All Results":
+    opponent = 'vs' # all titles contain 'vs'
+
+max_queries = st.slider("Select max video results: ",max_value=500)
+
+submit = st.button("Search")
+st.divider()
+
+if submit: # change to if submit button is pressed
     runs += 1
     if runs == 2:
         st.rerun()
-    with st.expander(f'Videos'):
+    with st.expander('**Video Results:**'):
         for key in get_channel_playlists(channelId):
-            if champion in key:
+            if champion == key.split(' ')[0]: # split string to isolate first word to isolate "viego" when searching "Vi" problem
                 display_video(champion,key)
         
-
-'''
-things to add:
-filters (role, matchup, size, patch?)
-for size, add scroller that scales with length of selected champion playlist
-style the website to look better
-add more functions to make code more readable 
-'''
