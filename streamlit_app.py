@@ -22,6 +22,9 @@ champions = (
     "Twitch","Udyr","Urgot","Varus","Vayne","Veigar","Vel'Koz","Vex","Vi","Viego","Viktor","Vladimir","Volibear","Warwick","Wukong","Xayah","Xerath","Xin Zhao","Yasuo",
     "Yone","Yorick","Yuumi","Zac","Zed","Zeri","Ziggs","Zilean","Zoe","Zyra"
 )
+roles = (
+    "All Results","Top","Jungle","Mid","Bottom","Support"
+)
 
 def get_playlist_info(channelId, page_token=None):
     global next_page_token
@@ -75,12 +78,13 @@ def get_videos(id,page_token=None):
 def display_video(champion,key):
     global results
     global queries
+
     id = get_channel_playlists(channelId).get(key)
     total = len(get_videos(id))
     progress_text = f"Searching {champion} ({results} / {total})..."
     progress_bar = st.progress(0, text=progress_text)
     for key in get_videos(id):
-        if role and opponent in key:
+        if opponent in key and any(r in key for r in role):
             if queries < max_queries:
                 queries += 1
                 st.link_button(key,f'https://www.youtube.com/watch?v={get_videos(id)[key]}') # creates button that passes title and videoId
@@ -94,18 +98,18 @@ st.caption('_Find High Elo Gameplay with :red[Ease]_')
 
 
 champion = st.selectbox("**Enter a champion:**", champions)
-role = st.selectbox(
-    '**Choose Role:**',
-    ('All Results','Top','Jungle','Mid','Carry','Support')
-)
-if role == "All Results":
-    role = 'Patch' # all titles contain 'Patch'
 
-opponent = st.selectbox('**Choose Matchup:**    ', champions)
+role = st.selectbox('**Choose Role:**', roles)
+if role == "All Results":
+    role = "Patch" # all titles contain 'Patch'
+elif role == "Bottom":
+    role = ["Carry","ADC"]
+
+opponent = st.selectbox('**Choose Matchup:**', champions)
 if opponent == "All Results":
     opponent = 'vs' # all titles contain 'vs'
 
-max_queries = st.slider("Select max video results: ",max_value=500)
+max_queries = st.slider("Select max video results: ",max_value=50)
 
 submit = st.button("Search")
 st.divider()
@@ -116,6 +120,12 @@ if submit: # change to if submit button is pressed
         st.rerun()
     with st.expander('**Video Results:**'):
         for key in get_channel_playlists(channelId):
-            if champion == key.split(' ')[0]: # split string to isolate first word to isolate "viego" when searching "Vi" problem
+            if champion == key.split(' ')[0]: # split string to isolate first word to avoid "viego" when searching "Vi" problem
                 display_video(champion,key)
-        
+
+'''
+things to add:
+styling
+error messages 
+docstrings to functions 
+'''
