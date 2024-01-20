@@ -27,6 +27,16 @@ roles = (
 )
 
 def get_playlist_info(channelId, page_token=None):
+    '''
+    retrieves return data of playlist tab for specified channel
+
+    args:
+        channelId - string, identifies the channel to fetch data for
+        page_token - string, used to identify the page number
+
+    return:
+        response - string, body of return data
+    '''
     global next_page_token
     request = youtube.playlists().list(
         part="snippet",
@@ -38,6 +48,15 @@ def get_playlist_info(channelId, page_token=None):
     return response
 
 def get_channel_playlists(channelId):
+    '''
+    retrieves a dictionary of channel playlist titles and ids for specified channel
+
+    args:
+        channelId - string, identifies the channel to fetch data for
+        
+    return:
+        playlists - dict, key is playlist name and value is playlist id
+    '''
     playlists = {} # dict of playlist titles and ids
     global next_page_token
 
@@ -56,6 +75,16 @@ def get_channel_playlists(channelId):
 
 
 def get_videos(id,page_token=None):
+    '''
+    retrieves a dictionary of playlist video titles and ids for specified channel
+
+    args:
+        id - string, identifies playlist to fetch data for
+        page_token - string, used to identify the page number
+
+    return:
+        videos - dict, key is video name and value is video id
+    '''
     videos = {} # dict of video titles and ids
 
     while True:
@@ -76,6 +105,13 @@ def get_videos(id,page_token=None):
             return videos
 
 def display_video(champion,key):
+    '''
+    outputs button of corresponding video that leads to YouTube URL
+
+    args:
+        champion - string, name of queried champion
+        key - string, name of playlist title
+    '''
     global results
     global queries
 
@@ -84,15 +120,21 @@ def display_video(champion,key):
     progress_text = f"Searching {champion} ({results} / {total})..."
     progress_bar = st.progress(0, text=progress_text)
     for key in get_videos(id):
-        if opponent in key and any(r in key for r in role):
-            if queries < max_queries:
-                queries += 1
-                st.link_button(key,f'https://www.youtube.com/watch?v={get_videos(id)[key]}') # creates button that passes title and videoId
+        if type(role) == str:
+            if opponent and role in key:
+                if queries < max_queries:
+                    queries += 1
+                    st.link_button(key,f'https://www.youtube.com/watch?v={get_videos(id)[key]}') # creates button that passes title and videoId
+        else:
+            if opponent in key and any(r in key for r in role):
+                if queries < max_queries:
+                    queries += 1
+                    st.link_button(key,f'https://www.youtube.com/watch?v={get_videos(id)[key]}') # creates button that passes title and videoId
         results += 1
         progress_bar.progress(results / total, text=f"Searching {champion} ({results} / {total})...")
 
 # Start of front end display
-st.title("League VOD Manager")
+st.title("League VOD Manager 📽️")
 st.divider()
 st.caption('_Find High Elo Gameplay with :red[Ease]_')
 
@@ -122,10 +164,3 @@ if submit: # change to if submit button is pressed
         for key in get_channel_playlists(channelId):
             if champion == key.split(' ')[0]: # split string to isolate first word to avoid "viego" when searching "Vi" problem
                 display_video(champion,key)
-
-'''
-things to add:
-styling
-error messages 
-docstrings to functions 
-'''
