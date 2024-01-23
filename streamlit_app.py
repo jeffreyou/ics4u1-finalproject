@@ -7,9 +7,9 @@ youtube = build('youtube', 'v3', developerKey=API_KEY)
 channelId = "UCsVz2qkd_oGXGC66fcH4SFA"
 
 next_page_token = None
-runs = 0
-results = 0
-queries = 0
+runs = 0 # used to reset program when user presses "search" again
+results = 0 # used to keep show realtime search progress
+queries = 0 # used to identify how many results to output
 champions = (
     "All Results","Aatrox","Ahri","Akali","Akshan","Alistar","Amumu","Anivia","Annie","Aphelios","Ashe","Aurelion Sol","Azir","Bard","Bel'Veth","Blitzcrank","Brand",
     "Braum","Briar","Caitlyn","Camille","Cassiopeia","Cho'Gath","Corki","Darius","Diana","Dr. Mundo","Draven","Ekko","Elise","Evelynn","Ezreal","Fiddlesticks",
@@ -22,9 +22,8 @@ champions = (
     "Twitch","Udyr","Urgot","Varus","Vayne","Veigar","Vel'Koz","Vex","Vi","Viego","Viktor","Vladimir","Volibear","Warwick","Wukong","Xayah","Xerath","Xin Zhao","Yasuo",
     "Yone","Yorick","Yuumi","Zac","Zed","Zeri","Ziggs","Zilean","Zoe","Zyra"
 )
-roles = (
-    "All Results","Top","Jungle","Mid","Bottom","Support"
-)
+
+roles = ("All Results","Top","Jungle","Mid","Bottom","Support")
 
 def get_playlist_info(channelId, page_token=None):
     '''
@@ -70,7 +69,7 @@ def get_channel_playlists(channelId):
 
         next_page_token = response.get('nextPageToken')
 
-        if not next_page_token:
+        if not next_page_token: # checks if there are any more pages to fetch
             return playlists
 
 
@@ -96,12 +95,12 @@ def get_videos(id,page_token=None):
         )
         response = request.execute()
 
-        for playlistItems in response.get('items', []):
+        for playlistItems in response.get('items', []): # populates videos dict
             videos[playlistItems['snippet']['title']] = playlistItems['contentDetails']['videoId']
         
         page_token = response.get('nextPageToken')
 
-        if not page_token:
+        if not page_token: # checks if there are any more pages to fetch
             return videos
 
 def display_video(champion,key):
@@ -119,27 +118,27 @@ def display_video(champion,key):
     total = len(get_videos(id))
     progress_text = f"Searching {champion} ({results} / {total})..."
     progress_bar = st.progress(0, text=progress_text)
-    for key in get_videos(id):
-        if type(role) == str:
-            if opponent and role in key:
+
+    for key in get_videos(id): # iterates through each title in champion playlist
+        if type(role) == str: 
+            if opponent in key and role in key:
                 if queries < max_queries:
                     queries += 1
                     st.link_button(key,f'https://www.youtube.com/watch?v={get_videos(id)[key]}') # creates button that passes title and videoId
-        else:
+        else: # used if selected role is bottom (ADC and Carry both correspond)
             if opponent in key and any(r in key for r in role):
                 if queries < max_queries:
                     queries += 1
-                    st.link_button(key,f'https://www.youtube.com/watch?v={get_videos(id)[key]}') # creates button that passes title and videoId
+                    st.link_button(key,f'https://www.youtube.com/watch?v={get_videos(id)[key]}') # creates button that displays title and redirects to URL on click
         results += 1
-        progress_bar.progress(results / total, text=f"Searching {champion} ({results} / {total})...")
+        progress_bar.progress(results / total, text=f"Searching {champion} ({results} / {total})...") # updates progress bar through each iteration
 
 # Start of front end display
 st.title("League VOD Manager 📽️")
 st.divider()
 st.caption('_Find High Elo Gameplay with :red[Ease]_')
 
-
-champion = st.selectbox("**Enter a champion:**", champions)
+champion = st.selectbox("**Enter a champion:**", champions[1:], index=None, placeholder="Aatrox, Ahri, Akali...")
 
 role = st.selectbox('**Choose Role:**', roles)
 if role == "All Results":
@@ -156,11 +155,11 @@ max_queries = st.slider("Select max video results: ",max_value=50)
 submit = st.button("Search")
 st.divider()
 
-if submit: # change to if submit button is pressed
+if submit: # if search button is pressed
     runs += 1
-    if runs == 2:
+    if runs == 2: # resets program if search button is pressed again
         st.rerun()
     with st.expander('**Video Results:**'):
         for key in get_channel_playlists(channelId):
-            if champion == key.split(' ')[0]: # split string to isolate first word to avoid "viego" when searching "Vi" problem
+            if champion == key.split(' ')[0] or champion == key.split(' ')[0] + ' ' + key.split(' ')[1]: # split string to isolate first word to avoid "viego" when searching "Vi" problem, also allows 'aurelion sol' or 'lee sin' to be searched
                 display_video(champion,key)
